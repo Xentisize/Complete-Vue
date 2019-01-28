@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue.js in Ch. 2</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="container">
+      <div class="notification">
+        <section>
+          <form class="form">
+            <div class="field">
+              <label for="filterField" class="label">Field:</label>
+              <div class="control">
+                <div class="select">
+                  <select name="filterField" id="filterField" v-model="filter.field">
+                    <option value="">Disable Filters</option>
+                    <option value="isActive">Active User</option>
+                    <option value="name">Name</option>
+                    <option value="email">Email</option>
+                    <option value="balance">Balance</option>
+                    <option value="registered">Date Registered</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field" v-show="this.filter.field && !isActiveFilterSelected()">
+              <label for="filterQuery" class="label">Query</label>
+              <div class="control">
+                <input class="input" type="text" name="filterQuery" id="filterQuery" v-model="filter.query">
+              </div>
+            </div>
+            <div class="field" v-show="isActiveFilterSelected()">
+              <div class="control">
+                <label for="userStateActive" class="label">Active</label>
+                <input type="radio" name="userStateActive" id="userStateActive" :value="true" v-model="filter.userState"
+                  checked>
+                <label for="userStateInactive" class="label">Inactive</label>
+                <input type="radio" name="userStateInactive" id="userStateInactive" :value="false" v-model="filter.userState">
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section>
+          <div class="container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Balance</th>
+                  <th>Registered</th>
+                  <th>Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="person in people" v-show="filterRow(person)">
+                  <td>{{ person.name }}</td>
+                  <td><a :href="'mailto:' + person.email">{{ person.email }}</a></td>
+                  <td>{{ formatBalance(person.balance) }}</td>
+                  <td>{{ formatDate(person.registered) }}</td>
+                  <td>{{ activeStatus(person) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script>
+    data = [
+      {
+        "index": 0,
+        "guid": "acf22ef1-ff33-4adf-b884-b01a3746d029",
+        "isActive": true,
+        "balance": 3148.67,
+        "name": "Fisher Gould",
+        "email": "fishergould@maineland.com",
+        "registered": "2018-11-13T08:56:03"
+      },
+      {
+        "index": 1,
+        "guid": "e4f0472d-5680-4353-a9fd-d332bca44f8f",
+        "isActive": false,
+        "balance": 2894.46,
+        "name": "Christa Short",
+        "email": "christashort@maineland.com",
+        "registered": "2018-12-31T04:47:33"
+      },
+      {
+        "index": 2,
+        "guid": "259f32ff-6fbb-4a44-984f-f3afb62a7aef",
+        "isActive": true,
+        "balance": 1789.26,
+        "name": "Owen Roberson",
+        "email": "owenroberson@maineland.com",
+        "registered": "2015-12-10T02:31:17"
+      },
+      {
+        "index": 3,
+        "guid": "b6d96b8a-c4e5-48c0-b621-e4885714f998",
+        "isActive": false,
+        "balance": 2917.41,
+        "name": "Jewell Silva",
+        "email": "jewellsilva@maineland.com",
+        "registered": "2015-03-22T06:52:39"
+      },
+      {
+        "index": 4,
+        "guid": "53541d26-b00a-4c79-be1f-94a206b763f7",
+        "isActive": false,
+        "balance": 1209.94,
+        "name": "Mclaughlin Chambers",
+        "email": "mclaughlinchambers@maineland.com",
+        "registered": "2016-07-21T08:27:19"
+      },
+      {
+        "index": 5,
+        "guid": "c22b6522-558d-4188-a2e1-19488ada13bb",
+        "isActive": true,
+        "balance": 1981.43,
+        "name": "Mitzi Burke",
+        "email": "mitziburke@maineland.com",
+        "registered": "2014-04-20T01:17:22"
+      },
+      {
+        "index": 6,
+        "guid": "ed8e6542-16ef-4d26-95f0-b247a40739d4",
+        "isActive": false,
+        "balance": 3815.97,
+        "name": "Hattie Holcomb",
+        "email": "hattieholcomb@maineland.com",
+        "registered": "2014-03-07T11:59:00"
+      },
+      {
+        "index": 7,
+        "guid": "b8f5a48f-2855-4a80-9b24-472d560f7f40",
+        "isActive": true,
+        "balance": 1274.96,
+        "name": "Moran Kidd",
+        "email": "morankidd@maineland.com",
+        "registered": "2018-12-02T08:46:54"
+      },
+      {
+        "index": 8,
+        "guid": "8010fc72-aba7-4e1f-8ee5-261ab9bc85b5",
+        "isActive": false,
+        "balance": 2440.96,
+        "name": "Franks Vincent",
+        "email": "franksvincent@maineland.com",
+        "registered": "2015-10-15T11:24:49"
+      },
+      {
+        "index": 9,
+        "guid": "751e75b5-79b1-4156-8f90-25ec2e4047fc",
+        "isActive": true,
+        "balance": 3147.6,
+        "name": "Roxie Phillips",
+        "email": "roxiephillips@maineland.com",
+        "registered": "2017-03-11T12:06:23"
+      }
+    ]
+
+    const vm = new Vue({
+      el: '#app',
+
+      data: {
+        people: data,
+        currency: '$',
+        filter: {
+          field: '',
+          query: '',
+          filterQuery: '',
+        }
+      },
+
+      methods: {
+        activeStatus(person) {
+          return (person.isActive) ? 'Active' : 'Inactive'
+        },
+
+        formatBalance(balance) {
+          return this.currency + balance.toFixed(2)
+        },
+
+        formatDate(date) {
+          let registered = new Date(date)
+          return registered.toLocaleString('en-US')
+        },
+
+        filterRow(person) {
+          let result = true
+          if (this.filter.field) {
+            if (this.filter.field === 'isActive') {
+              result = (typeof this.filter.userState === 'boolean') ? (this.filter.userState === person.isActive) : true
+            } else {
+              let query = this.filter.query
+              let field = person[this.filter.field]
+              if (typeof field === 'number') {
+                query = query.replace(this.currency, '')
+                try {
+                  result = eval(field + query)
+                } catch (e) { }
+              } else {
+                field = field.toLowerCase()
+                result = field.includes(query.toLowerCase())
+              }
+            }
+          }
+          return result
+        },
+
+        isActiveFilterSelected() {
+          return (this.filter.field === 'isActive')
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
