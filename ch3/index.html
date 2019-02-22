@@ -39,11 +39,11 @@
             <div class="field is-grouped" v-show="isActiveFilterSelected()">
               <div class="control">
                 <label for="userStateActive" class="label">Active</label>
-                <input type="radio" name="userStateActive" id="userStateActive" :value="true" v-model="filter.userState"
+                <input type="radio" name="userStateActive" id="userStateActive" :value="true" v-model="filter.query"
                   checked>
                 <label for="userStateInactive" class="label">Inactive</label>
                 <input type="radio" name="userStateInactive" id="userStateInactive" :value="false"
-                  v-model="filter.userState">
+                  v-model="filter.query">
               </div>
             </div>
           </form>
@@ -65,10 +65,10 @@
                 <tr v-for="person in people" v-show="filterRow(person)">
                   <td>{{ person.name }}</td>
                   <td><a :href="'mailto:' + person.email">{{ person.email }}</a></td>
-                  <td :class="balanceClass(person)">{{ formatBalance(person.balance) }}</td>
-                  <td>{{ formatDate(person.registered) }}</td>
+                  <td :class="balanceClass(person)">{{ format(person, 'balance') }}</td>
+                  <td>{{ format(person, 'registered') }}</td>
                   <td :class="{ 'is-primary': person.isActive, 'is-warning': !person.isActive }">{{
-                    activeStatus(person) }}</td>
+                    format(person, 'isActive') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -188,44 +188,13 @@
       },
 
       methods: {
-        activeStatus(person) {
-          return (person.isActive) ? 'Active' : 'Inactive'
-        },
-
-        formatBalance(balance) {
-          return this.currency + balance.toFixed(2)
-        },
-
-        formatDate(date) {
-          let registered = new Date(date)
-          return registered.toLocaleString('en-US')
-        },
-
-        filterRow(person) {
-          let result = true
-          if (this.filter.field) {
-            if (this.filter.field === 'isActive') {
-              result = (typeof this.filter.userState === 'boolean') ? (this.filter.userState === person.isActive) : true
-            } else {
-              let query = String(this.filter.query)
-              let field = person[this.filter.field]
-              if (typeof field === 'number') {
-                query = query.replace(this.currency, '')
-                try {
-                  result = eval(field + query)
-                } catch (e) { }
-              } else {
-                field = field.toLowerCase()
-                result = field.includes(query.toLowerCase())
-              }
-            }
-          }
-          return result
-        },
-
         isActiveFilterSelected() {
           return (this.filter.field === 'isActive')
-        },
+        }, // isActiveFilterSelected() ends
+
+        activeClass(person) {
+          return (person.isActive) ? 'Active' : 'Inactive'
+        }, // activeClass() ends
 
         balanceClass(person) {
           let balanceLevel = 'is-success'
@@ -244,12 +213,54 @@
           }
 
           return [balanceLevel, increasing]
-        },
+        }, // balanceClass() ends
+
+        format(person, key) {
+          let field = person[key],
+              output = field.toString().trim()
+
+          switch(key) {
+            case 'balance':
+              output = this.currency + field.toFixed(2)
+              break
+            case 'registered':
+              let registered = new Date(field)
+              output = registered.toLocaleString('en-US')
+              break
+            case 'isActive':
+              output = (person.isActive) ? 'Active' : 'Inactive'
+          }
+          return output
+        }, // format() ends
 
         changeFilter(event) {
           this.filter.query = ''
           this.filter.field = event.target.value
-        }
+        }, // changeFilter() ends
+
+        filterRow(person) {
+          let visible = true,
+              field = this.filter.field
+              query = this.filter.query
+          if (field) {
+            if (this.isActiveFilterSelected()) {
+              visible = (typeof query === 'boolean') ? (query === person.isActive) : true
+            } else {
+              query = String(query)
+              field = person[field]
+              if (typeof field === 'number') {
+                query = query.replace(this.currency, '')
+                try {
+                  visible = eval(field + query)
+                } catch (e) { }
+              } else {
+                field = field.toLowerCase()
+                visible = field.includes(query.toLowerCase())
+              }
+            }
+          }
+          return visible
+        }, // filterRow() ends
       }
     })
   </script>
