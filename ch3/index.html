@@ -19,7 +19,7 @@
               <label for="filterField" class="label">Field:</label>
               <div class="control">
                 <div class="select">
-                  <select name="filterField" id="filterField" v-model="filter.field">
+                  <select name="filterField" id="filterField" @change="changeFilter($event)">
                     <option value="">Disable Filters</option>
                     <option value="isActive">Active User</option>
                     <option value="name">Name</option>
@@ -42,7 +42,8 @@
                 <input type="radio" name="userStateActive" id="userStateActive" :value="true" v-model="filter.userState"
                   checked>
                 <label for="userStateInactive" class="label">Inactive</label>
-                <input type="radio" name="userStateInactive" id="userStateInactive" :value="false" v-model="filter.userState">
+                <input type="radio" name="userStateInactive" id="userStateInactive" :value="false"
+                  v-model="filter.userState">
               </div>
             </div>
           </form>
@@ -206,7 +207,7 @@
             if (this.filter.field === 'isActive') {
               result = (typeof this.filter.userState === 'boolean') ? (this.filter.userState === person.isActive) : true
             } else {
-              let query = this.filter.query
+              let query = String(this.filter.query)
               let field = person[this.filter.field]
               if (typeof field === 'number') {
                 query = query.replace(this.currency, '')
@@ -243,6 +244,11 @@
           }
 
           return [balanceLevel, increasing]
+        },
+
+        changeFilter(event) {
+          this.filter.query = ''
+          this.filter.field = event.target.value
         }
       }
     })
