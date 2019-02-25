@@ -62,14 +62,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="person in people" v-show="filterRow(person)">
-                  <td>{{ person.name }}</td>
-                  <td><a :href="'mailto:' + person.email">{{ person.email }}</a></td>
-                  <td :class="balanceClass(person)">{{ format(person, 'balance') }}</td>
-                  <td>{{ format(person, 'registered') }}</td>
-                  <td :class="{ 'is-primary': person.isActive, 'is-warning': !person.isActive }">{{
-                    format(person, 'isActive') }}</td>
-                </tr>
+                <template v-for="individual in people">
+                  <team-member :person="individual" :filter="filter" :status-filter="isActiveFilterSelected()"></team-member>
+                </template>
               </tbody>
             </table>
           </div>
@@ -80,6 +75,16 @@
 
 
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script type="text/x-template" id="team-member-template">
+    <tr v-show="filterRow()">
+      <td>{{ person.name }}</td>
+      <td><a :href="'mailto:' + person.email">{{ person.email }}</a></td>
+      <td :class="balanceClass">{{ balance }}</td>
+      <td>{{ dateRegistered }}</td>
+      <td :class="activeClass">{{ status }}</td>
+    </tr>
+  </script>
+
   <script>
     data = [
       {
@@ -174,16 +179,90 @@
       }
     ]
 
+    Vue.component('team-member', {
+      template: '#team-member-template',
+
+      data() {
+        return {
+          currency: '$'
+        }
+      },
+
+      props: {
+        person: Object,
+        filter: Object,
+        statusFilter: Boolean,
+      },
+
+      computed: {
+        activeClass() {
+          return this.person.isActive ? 'is-primary' : 'is-warning'
+        },
+
+        balanceClass() {
+          let balanceLevel = 'is-success'
+          if (this.person.balance < 2000) {
+            balanceLevel = 'is-error'
+          } else if (this.person.balance < 3000) {
+            balanceLevel = 'is-warning'
+          }
+          let increasing = 'false',
+              balance = this.person.balance / 1000
+          if (Math.round(balance) === Math.ceil(balance)) {
+            increasing = 'increasing'
+          }
+          return [balanceLevel, increasing]
+        },
+
+        balance() {
+          return this.currency + this.person.balance.toFixed(2)
+        },
+
+        dateRegistered() {
+          let registered = new Date(this.person.registered)
+          return registered.toLocaleString('en-US')
+        },
+
+        status() {
+          return (this.person.isActive) ? 'Active' : 'Inactive'
+        },
+      }, // team-member's computed ends
+
+      methods: {
+        filterRow() {
+          let visible = true,
+              field = this.filter.field
+              query = this.filter.query
+          if (field) {
+            if (this.statusFilter) {
+              visible = (typeof query === 'boolean') ? (query === this.person.isActive) : true
+            } else {
+              query = String(query)
+              field = this.person[field]
+              if (typeof field === 'number') {
+                query.replace(this.currency, '')
+                try {
+                  visible = eval(field + query)
+                } catch(e) {}
+              } else {
+                field = field.toLowerCase()
+                visible = field.includes(query.toLowerCase())
+              }
+            }
+          }
+          return visible
+        } // filterRow() ends
+      } // methods ends
+    }) // team-member component ends
+
     const vm = new Vue({
       el: '#app',
 
       data: {
         people: data,
-        currency: '$',
         filter: {
           field: '',
           query: '',
-          filterQuery: '',
         }
       },
 
@@ -191,47 +270,6 @@
         isActiveFilterSelected() {
           return (this.filter.field === 'isActive')
         }, // isActiveFilterSelected() ends
-
-        activeClass(person) {
-          return (person.isActive) ? 'Active' : 'Inactive'
-        }, // activeClass() ends
-
-        balanceClass(person) {
-          let balanceLevel = 'is-success'
-
-          if (person.balance < 2000) {
-            balanceLevel = 'is-danger'
-          } else if (person.balance < 3000) {
-            balanceLevel = 'is-warning'
-          }
-
-          let increasing = false
-          let balance = person.balance / 1000
-
-          if (Math.round(balance) === Math.ceil(balance)) {
-            increasing = 'increasing'
-          }
-
-          return [balanceLevel, increasing]
-        }, // balanceClass() ends
-
-        format(person, key) {
-          let field = person[key],
-              output = field.toString().trim()
-
-          switch(key) {
-            case 'balance':
-              output = this.currency + field.toFixed(2)
-              break
-            case 'registered':
-              let registered = new Date(field)
-              output = registered.toLocaleString('en-US')
-              break
-            case 'isActive':
-              output = (person.isActive) ? 'Active' : 'Inactive'
-          }
-          return output
-        }, // format() ends
 
         changeFilter(event) {
           this.filter.query = ''
