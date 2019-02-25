@@ -14,39 +14,7 @@
     <div class="container">
       <div class="notification">
         <section>
-          <form class="form">
-            <div class="field">
-              <label for="filterField" class="label">Field:</label>
-              <div class="control">
-                <div class="select">
-                  <select name="filterField" id="filterField" @change="changeFilter($event)">
-                    <option value="">Disable Filters</option>
-                    <option value="isActive">Active User</option>
-                    <option value="name">Name</option>
-                    <option value="email">Email</option>
-                    <option value="balance">Balance</option>
-                    <option value="registered">Date Registered</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div class="field" v-show="this.filter.field && !isActiveFilterSelected()">
-              <label for="filterQuery" class="label">Query</label>
-              <div class="control">
-                <input class="input" type="text" name="filterQuery" id="filterQuery" v-model="filter.query">
-              </div>
-            </div>
-            <div class="field is-grouped" v-show="isActiveFilterSelected()">
-              <div class="control">
-                <label for="userStateActive" class="label">Active</label>
-                <input type="radio" name="userStateActive" id="userStateActive" :value="true" v-model="filter.query"
-                  checked>
-                <label for="userStateInactive" class="label">Inactive</label>
-                <input type="radio" name="userStateInactive" id="userStateInactive" :value="false"
-                  v-model="filter.query">
-              </div>
-            </div>
-          </form>
+          <filtering :filter="filter" @change-filter-query="changeQuery" @change-filter-field="changeFilter"></filtering>
         </section>
 
         <section>
@@ -63,7 +31,7 @@
               </thead>
               <tbody>
                 <template v-for="individual in people">
-                  <team-member :person="individual" :filter="filter" :status-filter="isActiveFilterSelected()"></team-member>
+                  <team-member :person="individual" :filter="filter"></team-member>
                 </template>
               </tbody>
             </table>
@@ -83,6 +51,42 @@
       <td>{{ dateRegistered }}</td>
       <td :class="activeClass">{{ status }}</td>
     </tr>
+  </script>
+
+  <script type="text/x-template" id="filtering-template">
+    <form class="form">
+      <div class="field">
+        <label for="filterField" class="label">Field:</label>
+        <div class="control">
+          <div class="select">
+            <select name="filterField" id="filterField" @change="changeFilterField($event)">
+              <option value="">Disable Filters</option>
+              <option value="isActive">Active User</option>
+              <option value="name">Name</option>
+              <option value="email">Email</option>
+              <option value="balance">Balance</option>
+              <option value="registered">Date Registered</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field" v-show="this.filter.field && !isActiveFilterSelected()">
+        <label for="filterQuery" class="label">Query</label>
+        <div class="control">
+          <input class="input" type="text" name="filterQuery" id="filterQuery" v-model="filter.query">
+        </div>
+      </div>
+      <div class="field is-grouped" v-show="isActiveFilterSelected()">
+        <div class="control">
+          <label for="userStateActive" class="label">Active</label>
+          <input type="radio" name="userStateActive" id="userStateActive" :value="true" v-model="filter.query"
+            checked>
+          <label for="userStateInactive" class="label">Inactive</label>
+          <input type="radio" name="userStateInactive" id="userStateInactive" :value="false"
+            v-model="filter.query">
+        </div>
+      </div>
+    </form>
   </script>
 
   <script>
@@ -191,7 +195,6 @@
       props: {
         person: Object,
         filter: Object,
-        statusFilter: Boolean,
       },
 
       computed: {
@@ -234,7 +237,7 @@
               field = this.filter.field
               query = this.filter.query
           if (field) {
-            if (this.statusFilter) {
+            if (this.filter.field === 'isActive') {
               visible = (typeof query === 'boolean') ? (query === this.person.isActive) : true
             } else {
               query = String(query)
@@ -255,6 +258,30 @@
       } // methods ends
     }) // team-member component ends
 
+    Vue.component('filtering', {
+      template: '#filtering-template',
+
+      props: {
+        filter: Object,
+      },
+
+      methods: {
+        changeFilterField(event) {
+          this.$emit('change-filter-field', event.target.value)
+        },
+
+        isActiveFilterSelected() {
+          return (this.filter.field === 'isActive')
+        }
+      }, // methods ends()
+
+      watch: {
+        'filter.query': function() {
+          this.$emit('change-filter-query', this.filter.query)
+        },
+      },
+    }) // filtering component ends
+
     const vm = new Vue({
       el: '#app',
 
@@ -267,13 +294,9 @@
       },
 
       methods: {
-        isActiveFilterSelected() {
-          return (this.filter.field === 'isActive')
-        }, // isActiveFilterSelected() ends
-
-        changeFilter(event) {
+        changeFilter(field) {
           this.filter.query = ''
-          this.filter.field = event.target.value
+          this.filter.field = field
         }, // changeFilter() ends
 
         filterRow(person) {
@@ -281,7 +304,7 @@
               field = this.filter.field
               query = this.filter.query
           if (field) {
-            if (this.isActiveFilterSelected()) {
+            if (this.filter.field === 'isActive') {
               visible = (typeof query === 'boolean') ? (query === person.isActive) : true
             } else {
               query = String(query)
@@ -299,6 +322,10 @@
           }
           return visible
         }, // filterRow() ends
+
+        changeQuery(query) {
+          this.filter.query = query
+        }
       }
     })
   </script>
