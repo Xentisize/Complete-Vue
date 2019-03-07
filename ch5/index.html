@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Dropbox in action</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <dropbox-viewer></dropbox-viewer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/4.0.16/Dropbox-sdk.js"></script>
+
+    <script type="text/x-template" id="dropbox-viewer-template">
+      <div>
+        <h1>Dropbox</h1>
+        <transition name="fade">
+            <div v-if="isLoading">Loading...</div>
+        </transition>
+        <transition>
+            <ul v-if="!isLoading">
+                <li v-for="entry in structure">
+                    <strong>{{ entry.name }}</strong>
+                    <span v-if="entry.size"> - {{ bytesToSize(entry.size) }}</span>
+                    <span v-if="entry.media_info"> - [{{ entry.media_info.metadata.dimensions.width }}px x {{ entry.media_info.metadata.dimensions.height }}px ]</span>
+                </li>
+            </ul>
+        </transition>
+      </div>
+    </script>
+
+    <script src="src/DropboxViewer.js"></script>
+    <script src="src/app.js"></script>
+  </body>
+</html>
