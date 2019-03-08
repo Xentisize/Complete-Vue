@@ -3,9 +3,12 @@ Vue.component('dropbox-viewer', {
 
   data() {
     return {
-      accessToken: 'sFpPbjQSFGAAAAAAAAAADMkVJUduzON1o1W05PkljiVHoe69ZXRdiXI7SaiwBC_d',
-      structure: [],
-      byteSizes: ['Bytes', 'KB', 'MB', 'GB', 'TB'],
+      accessToken:
+        'sFpPbjQSFGAAAAAAAAAADMkVJUduzON1o1W05PkljiVHoe69ZXRdiXI7SaiwBC_d',
+      structure: {
+        files: [],
+        folders: [],
+      },
       isLoading: true,
     }
   },
@@ -25,23 +28,18 @@ Vue.component('dropbox-viewer', {
           include_media_info: true,
         })
         .then(response => {
-          console.log(response.entries)
-          this.structure = response.entries
+          for (let entry of response.entries) {
+            if (entry['.tag'] === 'folder') {
+              this.structure.folders.push(entry)
+            } else {
+              this.structure.files.push(entry)
+            }
+          }
           this.isLoading = false
         })
         .catch(error => {
           console.log(error)
         })
-    },
-
-    bytesToSize(bytes) {
-      let output = '0 Byte'
-
-      if (bytes > 0) {
-        let i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)))
-        output = Math.round(bytes / Math.pow(1024, i), 2) + ' ' + this.byteSizes[i]
-      }
-      return output
     },
   },
 
