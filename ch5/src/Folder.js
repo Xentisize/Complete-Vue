@@ -1,7 +1,15 @@
 Vue.component('folder', {
-  template: `<li><strong>{{ f.name }}</strong></li>`,
+  template: `<li><strong>
+  <a :href="f.path_lower" @click.prevent="navigate()">{{ f.name }}</a>
+  </strong></li>`,
 
   props: {
-    f: Object
-  }
+    f: Object,
+  },
+
+  methods: {
+    navigate() {
+      this.$emit('path', this.f.path_lower)
+    },
+  },
 })

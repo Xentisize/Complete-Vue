@@ -3,12 +3,8 @@ Vue.component('dropbox-viewer', {
 
   data() {
     return {
-      accessToken:
-        'sFpPbjQSFGAAAAAAAAAADMkVJUduzON1o1W05PkljiVHoe69ZXRdiXI7SaiwBC_d',
-      structure: {
-        files: [],
-        folders: [],
-      },
+      accessToken: 'sFpPbjQSFGAAAAAAAAAADMkVJUduzON1o1W05PkljiVHoe69ZXRdiXI7SaiwBC_d',
+      structure: {},
       isLoading: true,
     }
   },
@@ -28,18 +24,28 @@ Vue.component('dropbox-viewer', {
           include_media_info: true,
         })
         .then(response => {
+          const structure = {
+            folders: [],
+            files: [],
+          }
           for (let entry of response.entries) {
             if (entry['.tag'] === 'folder') {
-              this.structure.folders.push(entry)
+              structure.folders.push(entry)
             } else {
-              this.structure.files.push(entry)
+              structure.files.push(entry)
             }
           }
+          this.structure = structure
           this.isLoading = false
         })
         .catch(error => {
           console.log(error)
         })
+    },
+
+    updateStructure(path) {
+      this.isLoadin = true
+      this.getFolderStructure(path)
     },
   },
 
