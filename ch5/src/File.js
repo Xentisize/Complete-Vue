@@ -1,14 +1,20 @@
 Vue.component('file', {
-  template: `<li><strong>{{ f.name }}</strong><span v-if="f.size"> - {{ bytesToSize(f.size) }}</span></li>`,
+  template: `<li>
+  <strong>{{ f.name }}</strong>
+  <span v-if="f.size"> - {{ bytesToSize(f.size) }}</span>
+  <span v-if="link"> - <a :href="link">Download</a></span>
+  </li>`,
 
   data() {
     return {
       byteSizes: ['Bytes', 'KB', 'MB', 'GB', 'TB'],
+      link: '',
     }
   },
 
   props: {
     f: Object,
+    d: Object,
   },
 
   methods: {
@@ -22,5 +28,15 @@ Vue.component('file', {
       }
       return output
     },
+  },
+
+  created() {
+    this.d
+      .filesGetTemporaryLink({
+        path: this.f.path_lower,
+      })
+      .then(data => {
+        this.link = data.link
+      })
   },
 })
