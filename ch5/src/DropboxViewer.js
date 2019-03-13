@@ -1,13 +1,16 @@
 Vue.component('dropbox-viewer', {
   template: '#dropbox-viewer-template',
 
+  props: {
+    path: String,
+  },
+
   data() {
     return {
       accessToken:
         'sFpPbjQSFGAAAAAAAAAADMkVJUduzON1o1W05PkljiVHoe69ZXRdiXI7SaiwBC_d',
       structure: {},
       isLoading: true,
-      path: '',
     }
   },
 
@@ -20,7 +23,6 @@ Vue.component('dropbox-viewer', {
     },
 
     getFolderStructure(path) {
-      window.location.hash = path
       this.dropbox()
         .filesListFolder({
           path: path,
@@ -40,7 +42,6 @@ Vue.component('dropbox-viewer', {
           }
           this.structure = structure
           this.isLoading = false
-          this.path = path
         })
         .catch(error => {
           this.isLoading = 'error'
@@ -49,13 +50,18 @@ Vue.component('dropbox-viewer', {
     },
 
     updateStructure(path) {
-      this.isLoadin = true
+      this.isLoading = true
       this.getFolderStructure(path)
     },
   },
 
   created() {
-    let hash = window.location.hash.substring(1)
-    this.getFolderStructure(hash || '')
+    this.getFolderStructure(this.path)
+  },
+
+  watch: {
+    path() {
+      this.updateStructure(this.path)
+    },
   },
 })

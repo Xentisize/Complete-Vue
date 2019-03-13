@@ -1,7 +1,7 @@
 Vue.component('breadcrumb', {
   template: `<div>
     <span v-for="(f, i) in folders">
-      <a @click.prevent="navigate(f)" :href="f.path">{{ f.name }}</a>
+      <a :href="f.path">{{ f.name }}</a>
       <span v-if="i !== (folders.length - 1)"> > </span>
     </span>
   </div>`,
@@ -19,7 +19,7 @@ Vue.component('breadcrumb', {
         slug += item
         output.push({
           name: item || 'home',
-          path: slug,
+          path: '#' + slug,
         })
         slug += '/'
       }
